@@ -1,3 +1,13 @@
+'''
+handles storing data (not files) on the local computer.
+format is json.
+
+should only directly be accessed and read from by the ScapeSync object.
+*unless instance is sent directly to a function
+
+generally objects shouldnt have their own instance of persistence
+'''
+
 import settings
 import os
 import json
@@ -7,39 +17,31 @@ class Persistence:
 	def __init__(self):
 		self.persistent_data = {}
 		self.read()
-		self.lock = None
-
-	def lock(self, key):
-		self.lock=key
-
-	def unlock(self, key):
-		if self.lock == key:
-			self.lock = None 
+		self.pre_save_callbacks = []
 
 	def read(self):
 		if os.path.exists(settings.PERSISTENCE_FILE_PATH):
-			with open(settings.PERSISTENCE_FILE_PATH, 'r') as file:
-				json_text = file.read()
+			with open(settings.PERSISTENCE_FILE_PATH, 'r') as mfile:
+				json_text = mfile.read()
 				self.persistent_data = json.loads(json_text)
-				file.close()
 		else:
 			print 'using default persistent_data'
 			self.persistent_data = settings.DEFAULT_PERSISTENCE_DATA
 
 	def save(self):
+		self.alert_presave_callbacks()
+		
+		print 'saving persistence data...'
+
 		if not os.path.exists(settings.USER_DATA_PATH):
 			os.makedirs(settings.USER_DATA_PATH)
 
-		with open(settings.PERSISTENCE_FILE_PATH, 'w+') as file:
-			file.write(json.dumps(self.persistent_data))
-			file.close()
+		with open(settings.PERSISTENCE_FILE_PATH, 'w+') as mfile:
+			mfile.write(json.dumps(self.persistent_data, indent=4))
 
 	def set(self, key, value):
-		if not self.lock:
-			self.persistent_data[key] = value
-			#self.save()
-		else:
-			print 'Persistence is locked'
+		self.persistent_data[key] = value
+		#self.save()
 		
 	def get(self, key):
 		return self.persistent_data[key]
@@ -49,3 +51,10 @@ class Persistence:
 
 	def __setitem__(self, key, value):
 		self.set(key, value)
+
+	def attach_presave_callback(self, callback):
+		self.pre_save_callbacks.append(callback)
+
+	def alert_presave_callbacks(self):
+		for cb in self.pre_save_callbacks:
+			cb()

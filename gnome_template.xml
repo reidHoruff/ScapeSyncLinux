@@ -1,0 +1,28 @@
+<!-- filename: {{filename}} -->
+<!-- generated on: {{timestamp}} -->
+<!-- by: {{app_name}} -->
+<!-- version: {{app_version}} -->
+
+<background>
+	<starttime>
+		<year>{{start_time.year}}</year>
+		<month>{{start_time.month}}</month>
+		<day>{{start_time.day}}</day>
+		<hour>{{start_time.hour}}</hour>
+		<minute>{{start_time.minute}}</minute>
+		<second>{{start_time.second}}</second>
+	</starttime>
+
+	{% for w in wallpaper %}
+	<static>
+		<duration>{{static_duration}}</duration>
+		<file>{{w.location}}</file>
+	</static>
+
+	<transition>
+		<duration>{{transition_duration}}</duration>
+		<from>{{w.location}}</from>
+		<to>{{w.next_location}}</to>
+	</transition>
+	{% endfor %}
+</background>
